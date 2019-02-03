@@ -1,0 +1,4 @@
+# yum install wget gcc ncurses-devel bison flex bc elfutils-libelf-devel openssl-devel perl
+# make menuconfig
+# make && make modules_install && make install
+# grub2-mkconfig -o /boot/grub2/grub.cfg
