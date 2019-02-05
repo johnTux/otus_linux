@@ -1,0 +1,164 @@
+зануление дисков, которые могут содержать md суперблок  
+# mdadm --zero-superblock --force /dev/sd{b,c,d,e}
+
+создание raid 5
+# mdadm --create /dev/md0 --level=5 --raid-devices=4 /dev/sd{b,c,d,e}
+
+# mdadm --detail /dev/md0
+/dev/md0:
+           Version : 1.2
+     Creation Time : Tue Feb  5 10:45:46 2019
+        Raid Level : raid5
+        Array Size : 761856 (744.00 MiB 780.14 MB)
+     Used Dev Size : 253952 (248.00 MiB 260.05 MB)
+      Raid Devices : 4
+     Total Devices : 4
+       Persistence : Superblock is persistent
+
+       Update Time : Tue Feb  5 12:34:16 2019
+             State : clean 
+    Active Devices : 4
+   Working Devices : 4
+    Failed Devices : 0
+     Spare Devices : 0
+
+            Layout : left-symmetric
+        Chunk Size : 512K
+
+Consistency Policy : resync
+
+              Name : otuslinux:0  (local to host otuslinux)
+              UUID : 154c2594:7805dbf2:aaed7d24:261d8e91
+            Events : 42
+
+    Number   Major   Minor   RaidDevice State
+       0       8       16        0      active sync   /dev/sdb
+       5       8       32        1      active sync   /dev/sdc
+       2       8       48        2      active sync   /dev/sdd
+       4       8       64        3      active sync   /dev/sde
+
+# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4] 
+md0 : active raid5 sde[4] sdd[2] sdb[0] sdc[5]
+      761856 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/4] [UUUU]
+
+создание gpt партиций по 100Мб
+# gdisk /dev/md0
+# lsblk
+NAME      MAJ:MIN RM  SIZE RO TYPE  MOUNTPOINT
+sda         8:0    0   40G  0 disk  
+└─sda1      8:1    0   40G  0 part  /
+sdb         8:16   0  250M  0 disk  
+└─md0       9:0    0  744M  0 raid5 
+  ├─md0p1 259:5    0  100M  0 md    
+  ├─md0p2 259:6    0  100M  0 md    
+  ├─md0p3 259:7    0  100M  0 md    
+  ├─md0p4 259:8    0  100M  0 md    
+  └─md0p5 259:9    0  100M  0 md    
+sdc         8:32   0  250M  0 disk  
+└─md0       9:0    0  744M  0 raid5 
+  ├─md0p1 259:5    0  100M  0 md    
+  ├─md0p2 259:6    0  100M  0 md    
+  ├─md0p3 259:7    0  100M  0 md    
+  ├─md0p4 259:8    0  100M  0 md    
+  └─md0p5 259:9    0  100M  0 md    
+sdd         8:48   0  250M  0 disk  
+└─md0       9:0    0  744M  0 raid5 
+  ├─md0p1 259:5    0  100M  0 md    
+  ├─md0p2 259:6    0  100M  0 md    
+  ├─md0p3 259:7    0  100M  0 md    
+  ├─md0p4 259:8    0  100M  0 md    
+  └─md0p5 259:9    0  100M  0 md    
+sde         8:64   0  250M  0 disk  
+└─md0       9:0    0  744M  0 raid5 
+  ├─md0p1 259:5    0  100M  0 md    
+  ├─md0p2 259:6    0  100M  0 md    
+  ├─md0p3 259:7    0  100M  0 md    
+  ├─md0p4 259:8    0  100M  0 md    
+  └─md0p5 259:9    0  100M  0 md
+
+создаем ФС на портициях
+# mkfs.ext4 /dev/md0p1
+# mkfs.ext4 /dev/md0p2
+# mkfs.ext4 /dev/md0p3
+# mkfs.ext4 /dev/md0p4
+# mkfs.ext4 /dev/md0p5
+
+монтируем в каталоги
+# mkdir -p /raid/disk{1,2,3,4,5}
+# mount /dev/md0p1 /raid/disk1
+# mount /dev/md0p2 /raid/disk2
+# mount /dev/md0p3 /raid/disk3
+# mount /dev/md0p4 /raid/disk4
+# mount /dev/md0p5 /raid/disk5
+# df -Th
+Filesystem     Type      Size  Used Avail Use% Mounted on
+/dev/sda1      xfs        40G  3.9G   37G  10% /
+devtmpfs       devtmpfs  488M     0  488M   0% /dev
+tmpfs          tmpfs     496M     0  496M   0% /dev/shm
+tmpfs          tmpfs     496M  6.7M  489M   2% /run
+tmpfs          tmpfs     496M     0  496M   0% /sys/fs/cgroup
+tmpfs          tmpfs     100M     0  100M   0% /run/user/1000
+/dev/md0p1     ext4       93M  1.6M   85M   2% /raid/disk1
+/dev/md0p2     ext4       93M  1.6M   85M   2% /raid/disk2
+/dev/md0p3     ext4       93M  1.6M   85M   2% /raid/disk3
+/dev/md0p4     ext4       93M  1.6M   85M   2% /raid/disk4
+/dev/md0p5     ext4       93M  1.6M   85M   2% /raid/disk5
+
+помечаем диск, как сбойный
+# mdadm /dev/md0 --fail /dev/sdc
+mdadm: set /dev/sdc faulty in /dev/md0
+
+# cat /proc/mdstat
+Personalities : [raid6] [raid5] [raid4] 
+md0 : active raid5 sde[4] sdd[2] sdb[0] sdc[5](F)
+      761856 blocks super 1.2 level 5, 512k chunk, algorithm 2 [4/3] [U_UU]
+
+удаляем диск
+# mdadm /dev/md0 --remove /dev/sdc
+
+зануление диска
+# mdadm --zero-superblock --force /dev/sdc
+
+добавление диска в массив
+# mdadm /dev/md0 --add /dev/sdc
+mdadm: added /dev/sdc
+
+# mdadm --detail /dev/md0
+/dev/md0:
+           Version : 1.2
+     Creation Time : Tue Feb  5 10:45:46 2019
+        Raid Level : raid5
+        Array Size : 761856 (744.00 MiB 780.14 MB)
+     Used Dev Size : 253952 (248.00 MiB 260.05 MB)
+      Raid Devices : 4
+     Total Devices : 4
+       Persistence : Superblock is persistent
+
+       Update Time : Tue Feb  5 13:04:52 2019
+             State : clean 
+    Active Devices : 4
+   Working Devices : 4
+    Failed Devices : 0
+     Spare Devices : 0
+
+            Layout : left-symmetric
+        Chunk Size : 512K
+
+Consistency Policy : resync
+
+              Name : otuslinux:0  (local to host otuslinux)
+              UUID : 154c2594:7805dbf2:aaed7d24:261d8e91
+            Events : 64
+
+    Number   Major   Minor   RaidDevice State
+       0       8       16        0      active sync   /dev/sdb
+       5       8       32        1      active sync   /dev/sdc
+       2       8       48        2      active sync   /dev/sdd
+       4       8       64        3      active sync   /dev/sde
+
+прописываем собранный raid в конфиг
+# mdadm --detail --scan --verbose > /etc/mdadm.conf
+# cat /etc/mdadm.conf
+ARRAY /dev/md/0 level=raid5 num-devices=4 metadata=1.2 name=otuslinux:0 UUID=154c2594:7805dbf2:aaed7d24:261d8e91
+   devices=/dev/sdb,/dev/sdc,/dev/sdd,/dev/sde
