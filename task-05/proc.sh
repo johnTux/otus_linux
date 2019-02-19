@@ -15,7 +15,7 @@ ls -a $PROC | grep -o '[0-9]*' | sort -n
 #echo PID STAT COMMAND > ps
 #cat ps
 
-for proc in ls /proc/ | egrep "^[0-9]" | sort -n
+for proc in `ls /proc/ | egrep "^[0-9]" | sort -n`
 do
 if [ -d "/proc/$proc" ]; then
 cd /proc/$proc
