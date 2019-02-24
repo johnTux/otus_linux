@@ -1,26 +1,16 @@
 #!/usr/bin/env bash
 
-PROC=/proc
+PID=`ls /proc/ | egrep "^[0-9]" | sort -n`
+STATUS=/proc/$PID
+echo
+awk 'BEGIN {print "PID     STAT     COMMAND\n-----------------------------------"}'
 
-ls -a $PROC | grep -o '[0-9]*' | sort -n
-
-#!/bin/bash
-
-#PID=$PID
-#STAT=$STAT
-#COMMAND=$COMMAND
-#pidDir="/proc/pidDir"
-#awk 'BEGIN {print " PID STAT COMMAND\n-----------------------------------"}'
-#cat /proc/1131/status | awk '$1 == "Pid:" {print " " $2}' > ps
-#echo PID STAT COMMAND > ps
-#cat ps
-
-for proc in `ls /proc/ | egrep "^[0-9]" | sort -n`
+for proc in $PID
 do
-if [ -d "/proc/$proc" ]; then
-cd /proc/$proc
-cat /proc/$proc/status | awk '$1 == "Pid:" {print " " $2}' > ps
-continue
+if [ -f "/proc/$proc/status" ]; then
+STAT=`cat /proc/$proc/status | grep 'State:' | awk '{print $2}'`
+COMMAND=`cat /proc/"$proc"/cmdline`
+echo -n -e $proc '\t' $STAT '\t' $COMMAND
+echo
 fi
-#echo $proc
 done
