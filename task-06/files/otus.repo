@@ -1,0 +1,5 @@
+[otus_local]
+name=Otus_Linux
+baseurl=file:///usr/share/repository
+enabled=0
+gpgcheck=0
