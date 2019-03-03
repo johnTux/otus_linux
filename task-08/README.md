@@ -159,6 +159,14 @@ PidFile /var/run/httpd-second.pid
 Listen 9090
 ```
 
+Временно отключим SELinux:
+
+```# setenforce 0```
+
+или
+
+```# setenforce Permissive```
+
 Запускаем несколько инстансов веб-сервера:
 
 ```
