@@ -1,0 +1,4 @@
+---
+# file: roles/nginx/vars/main.yml
+
+nginx_port: 8080

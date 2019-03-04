@@ -1,0 +1,43 @@
+---
+# file: roles/nginx/tasks/mail.yml
+
+- name: Add epel-release repo
+  yum:
+    name: epel-release
+    state: present
+  tags:
+    - add_epel_repo
+
+
+- name: Install nginx
+  yum:
+    name: nginx
+    state: present
+  notify:
+    - start_nginx
+  tags:
+    - nginx_install
+
+
+- name: Enabled nginx
+  systemd:
+     name: nginx
+     enabled: yes
+     state: restarted
+  tags:
+    - start_nginx
+
+
+- name: Replace default nginx.conf
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - restart_nginx
+  tags:
+    - push_nginx_conf
+
+      
