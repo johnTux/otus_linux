@@ -2,6 +2,160 @@
 
 ## 1. Написать сервис, который будет раз в 30 секунд мониторить лог на предмет наличия ключевого слова. Файл и слово должны задаваться в /etc/sysconfig
 
+Cоздаём файл с конфигурацией для сервиса в директории **/etc/sysconfig** - из неё сервис будет брать необходимые переменные.
+
+```
+# cat /etc/sysconfig/task08
+WORD="ALERT"
+LOG=/var/log/watchlog.log
+```
+
+Затем создаем **/var/log/watchlog.log** и пишем туда любые строки, плюс ключевое слово "ALERT":
+
+```
+# cp /var/log/messages /var/log/watchlog.log
+# cat /var/log/watchlog.log
+Mar 11 22:55:11 localhost systemd: Started Session 3 of user vagrant.
+Mar 11 22:55:11 localhost systemd-logind: New session 3 of user vagrant.
+Mar 11 22:55:11 localhost systemd: Starting Session 3 of user vagrant.
+Mar 11 22:55:11 localhost systemd-logind: Removed session 3.
+Mar 11 22:55:11 localhost systemd-logind: Removed session 2.
+Mar 11 22:55:11 localhost systemd: Removed slice User Slice of vagrant.
+Mar 11 22:55:11 localhost systemd: Stopping User Slice of vagrant.
+Mar 11 23:00:42 localhost systemd: Created slice User Slice of vagrant.
+Mar 11 23:00:42 localhost systemd: Starting User Slice of vagrant.
+Mar 11 23:00:42 localhost systemd: Started Session 4 of user vagrant.
+Mar 11 23:00:42 localhost systemd-logind: New session 4 of user vagrant.
+Mar 11 23:00:42 localhost systemd: Starting Session 4 of user vagrant.
+Mar 11 23:00:55 localhost yum[2925]: Installed: nano-2.3.1-10.el7.x86_64
+Mar 11 23:01:01 localhost systemd: Created slice User Slice of root.
+Mar 11 23:01:01 localhost systemd: Starting User Slice of root.
+Mar 11 23:01:01 localhost systemd: Started Session 5 of user root.
+Mar 11 23:01:01 localhost systemd: Starting Session 5 of user root.
+Mar 11 ALERT
+```
+
+Создадим скрипт и сделаем его исполняемым:
+
+```
+# cat /opt/task08.sh
+#!/bin/bash
+
+WORD=$1
+LOG=$2
+DATE=`date`
+
+if [ "grep $WORD $LOG &> /dev/null" ]; then 
+
+  logger "$DATE: Watchdog found WORD!"
+else
+  exit 0
+fi
+
+# chmod +x /opt/task08.sh
+```
+
+Команда **logger** отправляет лог в системный журнал.
+
+Создадим юнит для сервиса:
+
+```
+# cat /etc/systemd/system/task08.service
+[Unit]
+Description=My watchdog service
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/sysconfig/task08
+ExecStart=/opt/task08.sh $WORD $LOG
+```
+
+Создадим юнит для таймера:
+
+```
+# cat /etc/systemd/system/task08.timer
+[Unit]
+Description=Run watchdog script every 30 second
+
+[Timer]
+OnUnitActiveSec=30s
+AccuracySec=1us
+Unit=task08.service
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
+
+Перезапустим **systemd**:
+
+```
+# systemctl daemon-reload
+```
+
+Установим и запустим таймер для сервиса:
+
+```
+# systemctl enable task08.timer
+# systemctl start task08.timer
+```
+
+Убедимся, что таймер работает:
+
+```
+# systemctl status task08.timer
+● task08.timer - Run watchdog script every 30 second
+   Loaded: loaded (/etc/systemd/system/task08.timer; enabled; vendor preset: disabled)
+   Active: active (waiting) since Tue 2019-03-12 01:35:57 UTC; 4s ago
+
+Mar 12 01:35:57 localhost.localdomain systemd[1]: Started Run watchdog script every 30 second.
+Mar 12 01:35:57 localhost.localdomain systemd[1]: Starting Run watchdog script every 30 second.
+```
+
+и
+
+```
+# systemctl list-timers --all
+NEXT                         LEFT     LAST                         PASSED       UNIT                         ACTIVATES
+Tue 2019-03-12 01:37:27 UTC  22s left Tue 2019-03-12 01:36:57 UTC  7s ago       task08.timer                 task08.service
+Tue 2019-03-12 23:09:47 UTC  21h left Mon 2019-03-11 23:09:47 UTC  2h 27min ago systemd-tmpfiles-clean.timer systemd-tmpfiles-clean.service
+n/a                          n/a      n/a                          n/a          systemd-readahead-done.timer systemd-readahead-done.service
+
+3 timers listed.
+```
+
+Проверить работу таймера можно следующей командой:
+
+```
+# tail -f /var/log/messages
+Mar 12 01:35:57 localhost systemd: Started Run watchdog script every 30 second.
+Mar 12 01:35:57 localhost systemd: Starting Run watchdog script every 30 second.
+Mar 12 01:35:57 localhost systemd: Started My watchdog service.
+Mar 12 01:35:57 localhost systemd: Starting My watchdog service...
+Mar 12 01:35:57 localhost root: Tue Mar 12 01:35:57 UTC 2019: Watchdog found WORD!
+Mar 12 01:36:27 localhost systemd: Started My watchdog service.
+Mar 12 01:36:27 localhost systemd: Starting My watchdog service...
+Mar 12 01:36:27 localhost root: Tue Mar 12 01:36:27 UTC 2019: Watchdog found WORD!
+Mar 12 01:36:57 localhost systemd: Started My watchdog service.
+Mar 12 01:36:57 localhost systemd: Starting My watchdog service...
+Mar 12 01:36:57 localhost root: Tue Mar 12 01:36:57 UTC 2019: Watchdog found WORD!
+Mar 12 01:37:27 localhost systemd: Started My watchdog service.
+Mar 12 01:37:27 localhost systemd: Starting My watchdog service...
+Mar 12 01:37:27 localhost root: Tue Mar 12 01:37:27 UTC 2019: Watchdog found WORD!
+Mar 12 01:37:57 localhost systemd: Started My watchdog service.
+Mar 12 01:37:57 localhost systemd: Starting My watchdog service...
+Mar 12 01:37:57 localhost root: Tue Mar 12 01:37:57 UTC 2019: Watchdog found WORD!
+Mar 12 01:38:27 localhost systemd: Started My watchdog service.
+Mar 12 01:38:27 localhost systemd: Starting My watchdog service...
+Mar 12 01:38:27 localhost root: Tue Mar 12 01:38:27 UTC 2019: Watchdog found WORD!
+Mar 12 01:38:57 localhost systemd: Started My watchdog service.
+Mar 12 01:38:57 localhost systemd: Starting My watchdog service...
+Mar 12 01:38:57 localhost root: Tue Mar 12 01:38:57 UTC 2019: Watchdog found WORD!
+Mar 12 01:39:27 localhost systemd: Started My watchdog service.
+Mar 12 01:39:27 localhost systemd: Starting My watchdog service...
+Mar 12 01:39:27 localhost root: Tue Mar 12 01:39:27 UTC 2019: Watchdog found WORD!
+```
+
 ## 2. Из epel установить spawn-fcgi и переписать init-скрипт на unit-файл. Имя сервиса должно так же называться
 
 Устанавливаем spawn-fcgi и необходимые для него пакеты:
