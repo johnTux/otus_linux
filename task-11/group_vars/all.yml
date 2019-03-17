@@ -1,0 +1,24 @@
+---
+
+#server FreeIPA variables
+ipaserver_ip_address: 192.168.10.10
+ipaserver_fqdn: ipaserver.example.com
+ipaserver_hostname: ipaserver
+
+domain_name: example.com
+realm_name: EXAMPLE.COM
+directory_manager_password: 123456789
+
+ipa_user: admin
+ipa_pass: 123456789
+keytab_file: /etc/krb5.keytab
+krb_ticket_lifetime: 60s
+
+#client FreeIPA variables
+ipaclient_ip_address: 192.168.10.11
+ipaclient_fqdn: ipaclient.example.com
+ipaclient_hostname: ipaclient
+#client connection
+#principal_user: admin
+#principal_password: OtusOtus123
+#principal_user_password: Otus123Otus123

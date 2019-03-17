@@ -1,0 +1,8 @@
+---
+
+- name: Install freeipa server package
+  yum:
+    name: ipa-server
+    state: present
+  tags:
+    - install_freeipa_server

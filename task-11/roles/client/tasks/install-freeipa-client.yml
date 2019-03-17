@@ -1,0 +1,10 @@
+---
+
+- name: Install freeipa client package
+  yum:
+    name: ipa-client
+    state: present
+  tags:
+    - install_freeipa_client
+  
+      

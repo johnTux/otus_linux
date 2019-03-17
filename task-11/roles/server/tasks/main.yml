@@ -1,0 +1,4 @@
+---
+
+- include: install-freeipa-server.yml
+- include: setup-freeipa-server.yml     

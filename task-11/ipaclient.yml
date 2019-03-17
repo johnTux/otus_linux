@@ -1,0 +1,9 @@
+---
+
+- name: ipaclient
+  hosts: client
+  become: yes
+  
+  roles:
+    - common
+    - client

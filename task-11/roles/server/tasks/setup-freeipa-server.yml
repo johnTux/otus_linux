@@ -1,0 +1,14 @@
+---
+
+- name: Setup freeipa server
+  command: ipa-server-install -U --hostname={{ ipaserver_fqdn }} \
+      --domain={{ domain_name }} --realm={{ realm_name }} --ds-password={{ directory_manager_password }} \
+      --admin-password={{ ipa_pass }}
+  tags:
+    - setup_freeipa_server
+
+
+#- name: Kinit admin
+#  command: kinit -k -t "{{ keytab_file  }}" -l {{ krb_ticket_lifetime  }} {{ ipa_user }}
+#  tags:
+#    - kinit_admin

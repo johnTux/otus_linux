@@ -1,0 +1,9 @@
+---
+
+- name: ipaserver
+  hosts: server
+  become: yes
+  
+  roles:
+    - common
+    - server

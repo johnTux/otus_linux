@@ -1,0 +1,8 @@
+---
+
+ - name: Setup freeipa client
+   command: ipa-client-install -U --hostname={{ ipaclient_fqdn }} --mkhomedir \
+     --server {{ ipaserver_fqdn }} --domain {{ domain_name }} --realm {{ realm_name }} \
+     --principal {{ ipa_user }}@{{ realm_name }} --password {{ ipa_pass }}
+   tags:
+     - setup_freeipa_client
