@@ -5,7 +5,7 @@ auth       include      postlogin
 # Used with polkit to reauthorize users in remote sessions
 -auth      optional     pam_reauthorize.so prepare
 account    required     pam_nologin.so
-auth       [success=1 default=ignore] pam_succeed_if.so quite user ingroup admin
+account    [success=1 default=ignore] pam_succeed_if.so quiet user ingroup admin
 account    required     pam_time.so
 account    include      password-auth
 password   include      password-auth
