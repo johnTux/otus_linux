@@ -2,15 +2,15 @@
 
 Конфигурационные файлы:
 
-* [bacula-dir.conf](https://github.com/johnTux/otus_linux/blob/master/task-12/bacula-dir.conf) - управляющий демон, который контролирует все операции резервного копирования, восстановления, проверки и архивирования.
+* [bacula-dir.conf](https://github.com/johnTux/otus_linux/blob/master/task-12/bacula-dir.conf) - управляющий демон, который контролирует все операции резервного копирования, восстановления, проверки и архивирования;
 
-* [bacula-fd.conf_client](https://github.com/johnTux/otus_linux/blob/master/task-12/bacula-fd.conf_client) - устанавливается на машине, с которой выполняется резервное копирование (в данном случае для клиента)
+* [bacula-fd.conf_client](https://github.com/johnTux/otus_linux/blob/master/task-12/bacula-fd.conf_client) - устанавливается на машине, с которой выполняется резервное копирование (в данном случае для клиента);
 
-* [bacula-fd.conf_server](https://github.com/johnTux/otus_linux/blob/master/task-12/bacula-fd.conf_server) - устанавливается на машине, с которой выполняется резервное копирование (в данном случае для сервера)
+* [bacula-fd.conf_server](https://github.com/johnTux/otus_linux/blob/master/task-12/bacula-fd.conf_server) - устанавливается на машине, с которой выполняется резервное копирование (в данном случае для сервера);
 
-* [bacula-sd.conf](https://github.com/johnTux/otus_linux/blob/master/task-12/bacula-sd.conf) - запускается на сервере отвечающим за «физическое»хранение данных
+* [bacula-sd.conf](https://github.com/johnTux/otus_linux/blob/master/task-12/bacula-sd.conf) - запускается на сервере, отвечающим за «физическое» хранение данных;
 
-* [bconsole.conf](https://github.com/johnTux/otus_linux/blob/master/task-12/bconsole.conf) - сервис для взаимодействия с Bacula Director (устанавливается на машине администратора)
+* [bconsole.conf](https://github.com/johnTux/otus_linux/blob/master/task-12/bconsole.conf) - консоль взаимодействия с Bacula Director (устанавливается на машине администратора).
 
 Лог выполненных jobs:
 
