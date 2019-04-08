@@ -1,0 +1,61 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure(2) do |config|
+  config.vm.box = "centos/7"
+  config.vm.box_check_update = true
+  #config.vm.network "forwarded_port", guest: 80, host: 8080
+  #config.vm.synced_folder "../data", "/vagrant_data"
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "2048"
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+    yum update -y && yum upgrade -y
+    yum install epel-release -y
+    yum install htop nano net-tools tcpdump -y
+    timedatectl set-timezone Europe/Moscow
+    rpm --import https://packages.elastic.co/GPG-KEY-elasticsearch
+    cat >> /etc/yum.repos.d/elk.repo << EOF
+[elastic-6.x]
+name=Elastic repository for 6.x packages
+baseurl=https://artifacts.elastic.co/packages/6.x/yum
+gpgcheck=1
+gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
+enabled=1
+autorefresh=1
+type=rpm-md
+EOF
+  SHELL
+
+  config.vm.define "web", primary: true do |w|
+    w.vm.hostname = 'web-server'
+    w.vm.network "private_network", ip: "192.168.111.10"
+    w.vm.provision "shell", inline: <<-SHELL
+      yum install nginx filebeat -y
+      systemctl enable nginx && systemctl start nginx
+      cp /etc/filebeat/filebeat.yml /etc/filebeat/filebeat.yml.back
+      cp /vagrant/filebeat.yml /etc/filebeat/
+      systemctl enable filebeat && systemctl start filebeat
+
+    SHELL
+  end
+
+  config.vm.define "log" do |l|
+    l.vm.hostname = 'log-server'
+    l.vm.network "private_network", ip: "192.168.111.11"
+    l.vm.provision "shell", inline: <<-SHELL
+      yum install java-1.8.0-openjdk -y
+      yum install elasticsearch kibana logstash -y
+      systemctl daemon-reload
+      cp /etc/elasticsearch/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml.back
+      cp /etc/kibana/kibana.yml /etc/kibana/kibana.yml.back
+      cp /vagrant/elasticsearch.yml /etc/elasticsearch/
+      cp /vagrant/kibana.yml /etc/kibana/
+      systemctl enable elasticsearch && systemctl start elasticsearch
+      systemctl enable kibana && systemctl start kibana
+      systemctl enable logstash && systemctl start logstash
+    SHELL
+  end
+
+end
