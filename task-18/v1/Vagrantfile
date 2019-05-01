@@ -124,11 +124,7 @@ Vagrant.configure("2") do |config|
               systemctl enable ospfd
               systemctl start ospfd
               SHELL
-
-        end
-
+         end
       end
-
-  end
-  
+   end
 end
