@@ -1,0 +1,12 @@
+hostname ABR3
+
+log file /var/log/quagga/ospfd.log
+
+router ospf
+ ospf router-id 192.168.16.2
+ redistribute connected
+ network 10.3.0.0/24 area 3
+ network 192.168.16.0/30 area 0
+ network 192.168.20.0/30 area 0
+
+line vty

@@ -1,0 +1,20 @@
+hostname ABR3
+
+log file /var/log/quagga/quagga.log
+
+interface eth3
+ description ABR3
+ ip address 10.3.0.1/24
+ ipv6 nd suppress-ra
+
+interface vlan16
+ description to site ABR1
+ ip address 192.168.16.2/30
+ ipv6 nd suppress-ra
+
+interface vlan20
+ description to site ABR2
+ ip address 192.168.20.2/30
+ ipv6 nd suppress-ra
+
+line vty
