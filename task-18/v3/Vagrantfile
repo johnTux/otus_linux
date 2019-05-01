@@ -30,7 +30,6 @@ MACHINES = {
             ]
   }, 
 
-
 }
 
 Vagrant.configure("2") do |config|
@@ -131,6 +130,5 @@ Vagrant.configure("2") do |config|
       end
 
   end
-  
   
 end
