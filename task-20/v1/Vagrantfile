@@ -1,0 +1,118 @@
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+
+MACHINES = {
+  :serverTap => {
+        :box_name => "centos/7",
+        :net => [
+                   {ip: '192.168.0.1', adapter: 2, netmask: "255.255.255.0", virtualbox__intnet: "net"}
+                ]
+  },
+
+  :clientTap => {
+        :box_name => "centos/7",
+        :net => [
+                   {ip: '192.168.0.2', adapter: 2, netmask: "255.255.255.0", virtualbox__intnet: "net"},
+                ]
+  },
+
+  :serverTun => {
+        :box_name => "centos/7",
+        :net => [
+                   {ip: '192.168.0.3', adapter: 2, netmask: "255.255.255.0", virtualbox__intnet: "net"}
+                ]
+  },
+
+  :clientTun => {
+        :box_name => "centos/7",
+        :net => [
+                   {ip: '192.168.0.4', adapter: 2, netmask: "255.255.255.0", virtualbox__intnet: "net"}
+                ]
+  },
+
+}
+
+Vagrant.configure("2") do |config|
+
+  MACHINES.each do |boxname, boxconfig|
+      
+    config.vm.define boxname do |box|
+
+        box.vm.box = boxconfig[:box_name]
+        box.vm.host_name = boxname.to_s
+
+        config.vm.provider "virtualbox" do |v|
+          v.memory = 256
+        end
+
+        boxconfig[:net].each do |ipconf|
+          box.vm.network "private_network", ipconf
+        end
+        
+        box.vm.provision "shell", inline: <<-SHELL
+          mkdir -p ~root/.ssh
+                cp ~vagrant/.ssh/auth* ~root/.ssh
+          timedatectl set-timezone Europe/Moscow
+        SHELL
+        
+        case boxname.to_s
+          when "serverTap"
+            box.vm.provision "shell", run: "always", inline: <<-SHELL
+              setenforce 0
+              echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
+              sysctl -p /etc/sysctl.conf
+              yum install epel-release -y
+              yum install openvpn iperf -y
+              cp /vagrant/files/server_tap.conf /etc/openvpn/server.conf
+              cp /vagrant/files/ta.key /etc/openvpn/
+              chown root. /etc/openvpn/ta.key
+              chmod 600 /etc/openvpn/ta.key
+              systemctl start openvpn@server
+              systemctl enable openvpn@server
+              SHELL
+          when "clientTap"
+            box.vm.provision "shell", run: "always", inline: <<-SHELL
+              setenforce 0
+              echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
+              sysctl -p /etc/sysctl.conf
+              yum install epel-release -y
+              yum install openvpn iperf -y
+              cp /vagrant/files/client_tap.conf /etc/openvpn/client.conf
+              cp /vagrant/files/ta.key /etc/openvpn/
+              chown root. /etc/openvpn/ta.key
+              chmod 600 /etc/openvpn/ta.key
+              systemctl start openvpn@client
+              systemctl enable openvpn@client
+              SHELL
+          when "serverTun"
+            box.vm.provision "shell", run: "always", inline: <<-SHELL
+              setenforce 0
+              echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
+              sysctl -p /etc/sysctl.conf
+              yum install epel-release -y
+              yum install openvpn iperf -y
+              cp /vagrant/files/server_tun.conf /etc/openvpn/server.conf
+              cp /vagrant/files/ta.key /etc/openvpn/
+              chown root. /etc/openvpn/ta.key
+              chmod 600 /etc/openvpn/ta.key
+              systemctl start openvpn@server
+              systemctl enable openvpn@server
+              SHELL
+          when "clientTun"
+            box.vm.provision "shell", run: "always", inline: <<-SHELL
+              setenforce 0
+              echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
+              sysctl -p /etc/sysctl.conf
+              yum install epel-release -y
+              yum install openvpn iperf -y
+              cp /vagrant/files/client_tun.conf /etc/openvpn/client.conf
+              cp /vagrant/files/ta.key /etc/openvpn/
+              chown root. /etc/openvpn/ta.key
+              chmod 600 /etc/openvpn/ta.key
+              systemctl start openvpn@client
+              systemctl enable openvpn@client
+              SHELL
+          end
+       end
+   end
+end
