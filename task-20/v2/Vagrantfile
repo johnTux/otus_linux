@@ -1,0 +1,77 @@
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+
+MACHINES = {
+  :server => {
+        :box_name => "centos/7",
+        :net => [
+                   {ip: "192.168.0.1", adapter: 2, netmask: "255.255.255.0", virtualbox__intnet: "ovpn-net"},
+                ]
+  },
+  
+  :client => {
+        :box_name => "centos/7",
+        :net => [
+                   {ip: "192.168.0.2", adapter: 2, netmask: "255.255.255.0", virtualbox__intnet: "ovpn-net"},
+                ]
+  },
+
+}
+
+Vagrant.configure("2") do |config|
+
+  MACHINES.each do |boxname, boxconfig|
+      
+    config.vm.define boxname do |box|
+
+        box.vm.box = boxconfig[:box_name]
+        box.vm.host_name = boxname.to_s
+
+        config.vm.provider "virtualbox" do |v|
+          v.memory = 256
+        end
+
+        boxconfig[:net].each do |ipconf|
+          box.vm.network "private_network", ipconf
+        end
+              
+        box.vm.provision "shell", inline: <<-SHELL
+          mkdir -p ~root/.ssh
+                cp ~vagrant/.ssh/auth* ~root/.ssh
+          timedatectl set-timezone Europe/Moscow
+        SHELL
+        
+        case boxname.to_s
+          when "server"
+            box.vm.provision "shell", run: "always", inline: <<-SHELL
+              setenforce 0
+              echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
+              sysctl -p /etc/sysctl.conf
+              yum install epel-release -y
+              yum install openvpn -y
+              cp /vagrant/server/openvpn-server-ca.crt /etc/openvpn/ca.crt
+              cp /vagrant/server/openvpn-server.key /etc/openvpn/server.key
+              cp /vagrant/server/openvpn-server.crt /etc/openvpn/server.crt
+              cp /vagrant/server/openvpn-server-dh.pem /etc/openvpn/dh2048.pem
+              cp /vagrant/server/server.conf /etc/openvpn/server.conf
+              systemctl enable openvpn@server.service
+              systemctl start openvpn@server.service
+              SHELL
+          when "client"
+            box.vm.provision "shell", run: "always", inline: <<-SHELL
+              setenforce 0
+              echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
+              sysctl -p /etc/sysctl.conf
+              yum install epel-release -y
+              yum install openvpn -y
+              cp /vagrant/client/openvpn-server-ca.crt /etc/openvpn/ca.crt
+              cp /vagrant/client/client.key /etc/openvpn/
+              cp /vagrant/client/client.crt /etc/openvpn/
+              cp /vagrant/client/client.conf /etc/openvpn/
+              systemctl enable openvpn@client.service
+              systemctl start openvpn@client.service
+              SHELL
+          end
+       end
+   end
+end
