@@ -64,7 +64,7 @@ Vagrant.configure("2") do |config|
               sysctl -p /etc/sysctl.conf
               yum install epel-release -y
               yum install openvpn -y
-              cp /vagrant/client/openvpn-server-ca.crt /etc/openvpn/ca.crt
+              cp /vagrant/client/ca.crt /etc/openvpn/ca.crt
               cp /vagrant/client/client.key /etc/openvpn/
               cp /vagrant/client/client.crt /etc/openvpn/
               cp /vagrant/client/client.conf /etc/openvpn/
