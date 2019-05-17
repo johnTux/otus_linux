@@ -102,4 +102,8 @@ TCP window size: 81.0 KByte (default)
 
 В результате поднимутся две виртуалки **server** и **client**, с возможностью прохождения трафика в обе стороны, по адресам сети 10.0.1.0/24, назначенным данным машинам.
 
+Для подключения с локальной машины на ВМ, необходимо выполнить ```vagrant up``` из директории **[local](https://github.com/johnTux/otus_linux/tree/master/task-20/local)**.
+
+В результате поднимется виртуалка **server**, к которой можно будет подключиться с хоста по openvpn, выполнив ```$ sudo openvpn --config client.conf``` из директории **[local/client](https://github.com/johnTux/otus_linux/tree/master/task-20/local)**.
+
 Необходимые сертификаты были сгенерированы посредством скриптов в папке **[scripts](https://github.com/johnTux/otus_linux/tree/master/task-20/v2/scripts)**.
