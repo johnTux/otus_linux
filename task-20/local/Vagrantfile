@@ -5,7 +5,7 @@ MACHINES = {
   :server => {
         :box_name => "centos/7",
         :net => [
-                   {ip: "192.168.0.1", adapter: 2, netmask: "255.255.255.0"},
+                   {ip: "192.168.0.15", adapter: 2, netmask: "255.255.255.0"},
                 ]
   },
   
